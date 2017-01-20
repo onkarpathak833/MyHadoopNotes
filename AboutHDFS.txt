@@ -1,0 +1,138 @@
+Hadoop cluster works as follows:
+
+Data is broken into chunks & distributed to different nodes.
+Each node(computer) processes data in it’s storage to produce local results
+Results from each node are assembled to produce final results.
+
+So why cant we use RDBMS with lots of storage space and run batch analysis ?
+
+why do we need MapReduce ?
+
+Seek time of fidk -> latency of system
+Transfer rate of the disk-> bandwidth of disk operation.
+
+MapReduce uses sort/merge kind of technique to update database
+whereas Databses use B tree indexing to perform database operation.
+
+{A B-tree is a method of placing and locating files (called records or keys) in a database. (The meaning of the letter B has not been explicitly defined.) 
+The B-tree algorithm minimizes the number of times a 
+medium must be accessed to locate a desired record, thereby speeding up the process.
+}
+
+
+MapReduce is a good fit for problems
+that need to analyze the whole dataset, in a batch fashion, particularly for ad hoc analysis.
+
+MapReduce is a good fit for problems
+that need to analyze the whole dataset, in a batch fashion, particularly for ad hoc analysis.
+
+An RDBMS is good for point queries or updates, where the dataset has been indexed
+to deliver low-latency retrieval and update times of a relatively small amount of
+data. 
+
+MapReduce suits applications where the data is written once, and read many
+times, whereas a relational database is good for datasets that are continually updated.
+
+Relational database are in normalized form making it suitable for point queries and it removes 
+redundant data.
+whereas Hadoop assumes un-normalized data. and rely on concept of key-value pair that is chosen by programmer.
+
+In Map-Reduce programmer writes Map and Reduce programs - each of which defines a mapping from one set of key-value pairs to another
+
+
+So in case of RDBMS of its a large dataset, getting data will take time thru query, even if youscale data linearly i.e. thru two systems dividing data
+each query would take same time
+in case of Hadoop, MapReduce has two dataset with two cluster would take less time.
+
+MapReduce tries to collocate the data with the compute node, so data access is fast
+since it is local.6 This feature, known as data locality, is at the heart of MapReduce and
+is the reason for its good performance.
+
+MapReduce operates
+only at the higher level: the programmer thinks in terms of functions of key and value
+pairs, and the data flow is implicit.
+
+Map-Reduce works on share nothing architecture because mappers and indepenedent tasks and reducers are independent of each other.
+But output of mappers is fed to reducers.
+
+****************************************************
+Hadoop divides large data set into chunks called as blocks. size of each block is 128 MB by default which is configurable.
+
+if some node on which block is stored gets failed; Hadoop performs replication.
+By default replication factor is 3 (configurable). 
+
+why block size is 128 MB ? (Because if block size is more it cannot be processed by multiple machines,less number of blocks
+if less block size, you will need more no of machines to process data. Daemon--> service/process)
+
+Architecture of HDFS ::
+
+Two Daemons are always running:: Name Node and Data Node
+
+Single name node---> 1. which block of file is present in which machines (block --> machine map && block --> file map)
+					 2. file to block information
+Name node is daemon that contains mapping of above two data. And this information is stored in RAM of Name Node. so its easier to srvice request
+
+Name node also maintains tree structure of HDFS.
+
+Data Node :: Always in communication with NAme node.
+Data node sends signals to Name Node called as HeartBeat.. To identify if Data node is alive in the structure. every 3seconds
+
+In case of replication, two blocks of the same file will not be there on the same node.
+
+In block size; block size is the upper limit so for 260MB file(128,128,4) third block will be 4MB only so that 124MB space is not wasted.
+
+In HDFS, where local machine also has file system, some part of the local file system is used as HDFS and some as local file system.
+
+In Hadoop 1.x :: we have 
+Name node, Secondary name node, Data Node (Job tracker, task tracker)
+Secondary name node is not replica of primary name node...
+
+Name node stores two files with it ::
+fsimage ::directort structure of HDFS
+         replication level
+		 block size of files and no of blocks of file (metadata)
+		 block size of files and no of blocks of file (metadata)
+		modification and access times, permissions 
+		 
+Edit Logs :: edit files contains only edits to hdfs structure
+             Edit logs are stored on RAM as well as in hard disk.
+			
+So, edit files with old fsimage gives you new fsimage... This process is called as "checkpointing""
+
+This checkpointing happen on a regular basis. Checkpointing is resource intensive process. and is periodically carried out after every 1 hour
+
+Checkpoining issue in Hadoop 1.X
+So machine of name node should be as reliable as possible
+
+Hadoop 2.X has multiple name nodes ::
+HDFS Federation ::
+List of sub directories managed/handled by name node are called namespace volume. And block of files belonging to namespace is called block pool.
+
+High Availability of HDFS ::
+
+every name node is replica of each other.
+{name node, data node all these are services and runs on different machines/same machines and different ports.
+}
+
+YARN :: yet another resource negotiator
+
+Map Reduce is distributed programming model.\
+Map Reduce requires memory and CPU for processing and running programs.
+Multiple machines in cluster requires RAM and CPU..
+
+Data locality :: we should run MAP reduce programs/jobs on that node which has required data;otherwise we will have to copy that data from other node..which is undesirable.
+JobTracker :: takes request from client..get requests from client to run Map Reduce programs. JobTracker then decides on which node the Map Reduse job/program should be run by consulting Name Node
+
+Client (MapReduce job) --> JobTracker (where should I run this program) --> NameNode(Tell me where these blocks are located) --> Launches Map Reduce task
+JobTracker launches Task Tracker --> runs on every node. monitors tasks.processes on every machine.
+
+JobTracker communicates with every TaskTracker..to coordinate with TaskTracker 
+
+in YARN Resource mgmt and processing mgmt is divided
+
+Resource Manager and Node Manager ::
+
+Resource Manager Single\
+Node manager running on every node.
+
+Client (MapReduce program) --> Resource manager
