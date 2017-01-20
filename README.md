@@ -1,0 +1,2 @@
+# MyHadoopNotes
+My Hadoop Notes.
